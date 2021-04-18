@@ -1,4 +1,5 @@
 #include <Wire.h>
+#include <Adafruit_Sensor.h>
 #include "SSD1306.h"
 #include "DHT.h"
 #include <ESP8266WiFi.h>
@@ -12,7 +13,7 @@ const char* ssid = "Sarvesh";
 const char* password = "8879607830";
 //WiFiClient client;
 
-char server[] = "website ip";  //eg: 192.168.0.222
+char server[] = "148.66.138.163";  //eg: 192.168.0.222
 
 
 #define dataPin1 D1
@@ -20,10 +21,10 @@ char server[] = "website ip";  //eg: 192.168.0.222
 #define dataPin3 D5
 #define dataPin4 D6
     
-#define DHTTYPE1 DHT11
-#define DHTTYPE2 DHT11
-#define DHTTYPE3 DHT11 
-#define DHTTYPE4 DHT11      
+#define DHTTYPE1 DHT22
+#define DHTTYPE2 DHT22
+#define DHTTYPE3 DHT22 
+#define DHTTYPE4 DHT22      
 
 SSD1306  display(0x3C, D3, D4);   // D3 -> SDA,D4 -> SCL
 DHT dht1(dataPin1, DHTTYPE1);
@@ -51,6 +52,7 @@ void setup(){
   dht2.begin();
   dht3.begin();
   dht4.begin();
+
   Serial.println("Connecting to ");
   Serial.println(ssid);
  
@@ -174,16 +176,10 @@ void displayWeather4 ()
     
 }
 void loop(){
-  humidityData1 = dht1.readHumidity();
-  temperatureData1 = dht1.readTemperature();
-  humidityData2 = dht2.readHumidity();
-  temperatureData2 = dht2.readTemperature();
-  humidityData3 = dht3.readHumidity();
-  temperatureData3 = dht3.readTemperature();
-  humidityData4 = dht4.readHumidity();
-  temperatureData4 = dht4.readTemperature(); 
-  Sending_To_phpmyadmindatabase(); 
-  delay(5000); // interval
+  int i;
+  
+  for(i=0;i<20;i++)
+  {
   displayWeather1(); //Calling back the displayWeather function
   display.display();
   delay (5000);
@@ -196,11 +192,30 @@ void loop(){
   displayWeather4();
   display.display();
   delay (5000);
+  Sending_To_phpmyadmindatabase(); 
+  delay(5000); // interval
+  Serial.print("count");
+  Serial.println(i);
+
+  if(i==720)
+  {
+    Serial.println("Resetting ESP");
+    ESP.restart(); //ESP.reset();
+   }
+}
 }
 void Sending_To_phpmyadmindatabase()   //CONNECTING WITH MYSQL
  {
    if (client.connect(server, 80)) {
     Serial.println("connected");
+    humidityData1 = dht1.readHumidity();
+    temperatureData1 = dht1.readTemperature();
+    humidityData2 = dht2.readHumidity();
+    temperatureData2 = dht2.readTemperature();
+    humidityData3 = dht3.readHumidity();
+    temperatureData3 = dht3.readTemperature();
+    humidityData4 = dht4.readHumidity();
+    temperatureData4 = dht4.readTemperature(); 
     // Make a HTTP request:
     Serial.print("GET http://omagroservices.com/get-data.php?temp1=");
     client.print("GET http://omagroservices.com/get-data.php?temp1=");     //YOUR URL
@@ -237,7 +252,7 @@ void Sending_To_phpmyadmindatabase()   //CONNECTING WITH MYSQL
     client.print(" ");      //SPACE BEFORE HTTP/1.1
     client.print("HTTP/1.1");
     client.println();
-    client.println("Host:website ip"); // put ur website ip
+    client.println("Host:148.66.138.163");
     client.println("Connection: close");
     client.println();
   } else {
